@@ -1,0 +1,8 @@
+flask
+torch
+torchvision
+open3d
+numpy
+Pillow
+opencv-python
+timm

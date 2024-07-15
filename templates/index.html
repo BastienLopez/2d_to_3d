@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Image Generation</title>
+    <link rel="stylesheet" href="static/styles.css">
+</head>
+<body>
+    <h1>3D Image Generation</h1>
+    <form id="upload-form" enctype="multipart/form-data">
+        <input type="file" id="image" name="image" accept="image/*" required>
+        <br>
+        <img id="preview" src="#" alt="Image Preview" style="display: none;">
+        <p id="image-name"></p>
+        <button type="submit">Upload and Process</button>
+    </form>
+    <div class="container" id="result-container" style="display: none;">
+        <div class="section" id="section1" style="display: none;">
+            <h2>Original 3D Image</h2>
+            <div id="original-viewer"></div>
+            <button id="validate1" onclick="showSection2()">Validate and Proceed</button>
+        </div>
+        <div class="section" id="section2" style="display: none;">
+            <h2>3D Image with AI Modifications</h2>
+            <div id="modified-viewer"></div>
+            <button id="validate2" onclick="showSection3()">Validate and Proceed</button>
+        </div>
+        <div class="section" id="section3" style="display: none;">
+            <h2>Final 3D Image</h2>
+            <div id="final-viewer"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.rawgit.com/mrdoob/three.js/r92/examples/js/loaders/PLYLoader.js"></script>
+    <script>
+        let el, css, width, height, perspective, rotateX, rotateY, scale, isDown, reverse, lastX, lastY;
+
+        function initializeTransform(viewerId) {
+            el = document.getElementById(viewerId);
+            css = document.getElementById('css');
+            width = el.clientWidth;
+            height = el.clientHeight;
+            perspective = 500;
+            rotateX = 0;
+            rotateY = 0;
+            scale = 100;
+            isDown = false;
+            reverse = false;
+
+            el.addEventListener('mousedown', function(e) {
+                isDown = true;
+                lastX  = e.clientX;
+                lastY  = e.clientY;
+            }, false);
+
+            el.addEventListener('mousewheel', wheel, false);
+            el.addEventListener('DOMMouseScroll', wheel, false);
+
+            document.addEventListener('mousemove', function(e) {
+                if (isDown) {
+                    xMultiplier = 180 / height / scaleVal();
+                    yMultiplier = 180 / width  / scaleVal();
+                    rotateX += (lastY - e.clientY) * xMultiplier;
+                    rotateY += (lastX - e.clientX) * yMultiplier * (reverse ? 1 : -1);
+                    rotateX  = Math.floor(rotateX % 360);
+                    rotateY  = Math.floor(rotateY % 360);
+                    reverse  = Math.abs(Math.floor(rotateX / 90) % 4) > 1;
+                    lastX    = e.clientX;
+                    lastY    = e.clientY;
+                    updateTransform();
+                }
+            }, false);
+
+            document.addEventListener('mouseup', function() {
+                isDown  = false;
+            }, false);
+        }
+
+        function scaleVal() {
+            var strScale = scale.toString();
+            if (scale >= 100) {
+                return parseFloat(strScale[0] + '.' +  strScale.slice(1));
+            }
+            return parseFloat('0.' + strScale);
+        }
+
+        function updateTransform() {
+            var pProp = 'perspective(' + perspective +  'px)',
+                xProp = 'rotateX('     + rotateX     + 'deg)',
+                yProp = 'rotateY('     + rotateY     + 'deg)',
+                sProp = 'scale('       + scaleVal()  +    ')',
+                props = [pProp, xProp, yProp, sProp].join(' ');
+            el.style.transform = props;
+            css.innerText = props;
+        }
+
+        function wheel(e) {
+            e.preventDefault();
+            var delta = e.wheelDelta || -e.detail;
+            scale += delta > 0 ? 5 : -5;
+            updateTransform();
+        }
+
+        document.getElementById('image').onchange = function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview').src = e.target.result;
+                    document.getElementById('preview').style.display = 'block';
+                    document.getElementById('image-name').innerText = file.name;
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        document.getElementById('upload-form').onsubmit = async function(event) {
+            event.preventDefault();
+            const formData = new FormData();
+            formData.append('image', document.getElementById('image').files[0]);
+
+            try {
+                const response = await fetch('/process_image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Response from server:', result);
+                    result.logs.forEach(log => console.log(log));
+
+                    // Show the result container and first section after processing
+                    document.getElementById('result-container').style.display = 'flex';
+                    document.getElementById('section1').style.display = 'flex'; 
+
+                    loadPLY('original-viewer', result.original_ply);
+                } else {
+                    console.error('Failed to process the image.');
+                }
+            } catch (error) {
+                console.error('Error during the image processing:', error);
+            }
+        };
+
+        function loadPLY(viewerId, filePath) {
+            const viewer = document.getElementById(viewerId);
+            viewer.innerHTML = '';  // Clear previous content
+            console.log(`Loading PLY file: ${filePath}`);
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, viewer.clientWidth / viewer.clientHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ alpha: true });
+            renderer.setSize(viewer.clientWidth, viewer.clientHeight);
+            viewer.appendChild(renderer.domElement);
+
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+            const loader = new THREE.PLYLoader();
+            loader.load(filePath, function (geometry) {
+                geometry.computeVertexNormals();
+                const material = new THREE.MeshStandardMaterial({ color: 0x0055ff });
+                const mesh = new THREE.Mesh(geometry, material);
+                scene.add(mesh);
+
+                const light = new THREE.DirectionalLight(0xffffff, 1);
+                light.position.set(5, 5, 5).normalize();
+                scene.add(light);
+
+                const ambientLight = new THREE.AmbientLight(0x404040);
+                scene.add(ambientLight);
+
+                camera.position.z = 5;
+                const animate = function () {
+                    requestAnimationFrame(animate);
+                    controls.update();
+                    renderer.render(scene, camera);
+                };
+                animate();
+            }, undefined, function (error) {
+                console.error('An error occurred while loading the PLY file:', error);
+            });
+
+            initializeTransform(viewerId);
+        }
+
+        function showSection2() {
+            document.getElementById('section1').style.display = 'none';
+            document.getElementById('section2').style.display = 'flex';
+            loadPLY('modified-viewer', 'static/only_modif_add/modified.ply');
+        }
+
+        function showSection3() {
+            document.getElementById('section2').style.display = 'none';
+            document.getElementById('section3').style.display = 'flex';
+            loadPLY('final-viewer', 'static/final_scan/final.ply');
+        }
+    </script>
+</body>
+</html>

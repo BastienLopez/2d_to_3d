@@ -11,7 +11,7 @@ from torchvision import datasets
 from torch.utils.data import DataLoader
 from PIL import Image
 import requests
-import cv2  # Ajoutez cette ligne
+import cv2  # Assurez-vous que cv2 est importé
 
 # Charger les informations de project_structure.json
 with open('project_structure.json', 'r') as f:
@@ -172,7 +172,7 @@ def depth_to_pointcloud(depth_map, image_path):
     colors = []
     for y in range(height):
         for x in range(width):
-            z = depth_map[y, x]
+            z = depth_map[y, x] * 10  # Increase depth scaling factor for more pronounced depth
             points.append([x, y, z])
             colors.append(image[y, x] / 255.0)
     points = np.array(points)

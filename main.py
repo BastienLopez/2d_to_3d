@@ -243,11 +243,6 @@ def process_image():
     file_path = f'uploads/{file.filename}'
     file.save(file_path)
 
-    # Générer les parties cachées
-    generated_img = generate_hidden_parts(file_path)
-    generated_img_path = f'uploads/generated_{file.filename}'
-    generated_img.save(generated_img_path)
-    
     # Estimer la profondeur avec l'image originale
     print("Estimating depth for original image...")
     depth_map = estimate_depth(file_path)
@@ -255,35 +250,24 @@ def process_image():
     original_ply_path = 'static/scan_base/original.ply'
     o3d.io.write_point_cloud(original_ply_path, pcd)
     print(f"Original point cloud saved to {original_ply_path}")
-    
-    # Estimer la profondeur avec l'image générée
-    print("Estimating depth for generated image...")
-    depth_map_with_generation = estimate_depth(generated_img_path)
-    pcd_with_generation = depth_to_pointcloud(depth_map_with_generation, generated_img_path)
-    modified_ply_path = 'static/only_modif_add/modified.ply'
-    o3d.io.write_point_cloud(modified_ply_path, pcd_with_generation)
-    print(f"Modified point cloud saved to {modified_ply_path}")
-    
+
     # Générer le maillage final
     print("Generating final mesh...")
-    mesh = pointcloud_to_mesh(pcd_with_generation)
+    mesh = pointcloud_to_mesh(pcd)
     final_ply_path = 'static/final_scan/final.ply'
     o3d.io.write_triangle_mesh(final_ply_path, mesh)
     print(f"Final mesh saved to {final_ply_path}")
 
     # Télécharger les fichiers PLY sur Sketchfab
     original_model_id = upload_to_sketchfab(original_ply_path, "Original 3D Image", "This is the original 3D image.")
-    modified_model_id = upload_to_sketchfab(modified_ply_path, "3D Image with AI Modifications", "This is the 3D image with AI modifications.")
     final_model_id = upload_to_sketchfab(final_ply_path, "Final 3D Image", "This is the final 3D image.")
 
     return jsonify({
         'original_model_id': original_model_id,
-        'modified_model_id': modified_model_id,
         'final_model_id': final_model_id,
         'logs': [
             f"Original point cloud saved to {original_ply_path}",
-            f"Modified point cloud saved to {modified_ply_path}",
-            f"Final mesh saved to {final_ply_path}",
+            f"Final mesh saved to {final_ply_path}"
         ]
     })
 

@@ -5,42 +5,6 @@
 
 Ce projet permet de convertir une image 2D en une représentation 3D en utilisant des techniques de génération de profondeur et d'amélioration IA pour générer des parties cachées de l'image.
 
-## Structure du Projet
-
-```
-2d_to_3d/
-│
-├── all_fichiers_need/
-│   ├── generative_model.pth
-│   ├── data/
-│   └── uploads/
-│       ├── generated_example.png
-│       ├── example.png
-│       └── example_result.ply
-│
-├── static/
-│   ├── styles.css
-│   ├── scan_base/
-│   │   └── original.ply
-│   ├── only_modif_add/
-│   │   └── modified.ply
-│   └── final_scan/
-│       └── final.ply
-│
-├── templates/
-│   └── index.html
-│
-├── depth_estimation.py
-├── depth_to_pointcloud.py
-├── final_generation.py
-├── only_modif.py
-├── pointcloud_to_mesh.py
-├── without_generation.py
-├── main.py
-├── requirements.txt
-└── README.md
-```
-
 ## Dépendances
 
 Assurez-vous d'avoir Python 3.6 ou une version ultérieure installée. Vous pouvez installer les dépendances nécessaires avec le fichier `requirements.txt`.

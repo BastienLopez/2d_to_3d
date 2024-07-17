@@ -9,13 +9,14 @@
 <body>
     <h1>3D Image Generation</h1>
     <form id="upload-form" enctype="multipart/form-data">
-        <input type="file" id="image" name="image" accept="image/*" required>
+        <div class="form-top-row">
+            <input type="file" id="image" name="image" accept="image/*" required>
+            <div id="loader" class="loader" style="display: none;"></div>
+            <button type="submit">Upload and Process</button>
+        </div>
         <br>
         <img id="preview" src="#" alt="Image Preview" style="display: none;">
         <p id="image-name"></p>
-        <button type="submit">Upload and Process</button>
-        <br>
-        <div id="loader" class="loader" style="display: none;"></div>
     </form>
     <div class="container" id="result-container" style="display: none;">
         <div class="section" id="section1" style="display: none;">
@@ -100,10 +101,10 @@
                     // Définir un intervalle pour rafraîchir les iframes toutes les 5 secondes jusqu'à ce qu'elles se chargent correctement
                     originalRefreshInterval = setInterval(() => {
                         refreshViewer('original-viewer', originalUrl);
-                    }, 5000); // 5 secondes
+                    }, 30000); // 30 secondes
                     finalRefreshInterval = setInterval(() => {
                         refreshViewer('final-viewer', finalUrl);
-                    }, 5000); // 5 secondes
+                    }, 30000); // 30 secondes
 
                 } else {
                     console.error('Failed to process the image.');

@@ -11,7 +11,7 @@ from torchvision import datasets
 from torch.utils.data import DataLoader
 from PIL import Image
 import requests
-import cv2  # Assurez-vous que cv2 est importé
+import cv2
 
 # Charger les informations de project_structure.json
 with open('project_structure.json', 'r') as f:
@@ -127,7 +127,7 @@ def estimate_depth(image_path, model_type="DPT_Large"):
     img = Image.open(image_path)
 
     # Redimensionner l'image si elle est trop grande
-    max_size = 1024  # Taille maximale
+    max_size = 2048  # Taille maximale pour les images 2K
     if max(img.size) > max_size:
         scale = max_size / max(img.size)
         new_size = (int(img.size[0] * scale), int(img.size[1] * scale))
@@ -150,7 +150,7 @@ def estimate_depth(image_path, model_type="DPT_Large"):
     
     prediction = torch.nn.functional.interpolate(
         prediction.unsqueeze(1),
-        size=img.shape[2:],
+        size=img.shape[2:],  # Garder la taille originale de l'image
         mode="bicubic",
         align_corners=False,
     ).squeeze()
@@ -164,6 +164,8 @@ def estimate_depth(image_path, model_type="DPT_Large"):
     print("Depth map created.")
     return depth_map
 
+
+
 def depth_to_pointcloud(depth_map, image_path):
     print("Converting depth map to point cloud...")
     image = cv2.imread(image_path)
@@ -172,9 +174,9 @@ def depth_to_pointcloud(depth_map, image_path):
     colors = []
     for y in range(height):
         for x in range(width):
-            z = depth_map[y, x] * 10  # Increase depth scaling factor for more pronounced depth
+            z = depth_map[y, x] * 10  # Augmenter le facteur de mise à l'échelle de la profondeur pour une profondeur plus prononcée
             points.append([x, y, z])
-            colors.append(image[y, x] / 255.0)
+            colors.append(image[y, x] / 255.0)  # Garder les couleurs en float
     points = np.array(points)
     colors = np.array(colors)
     pcd = o3d.geometry.PointCloud()
@@ -183,14 +185,17 @@ def depth_to_pointcloud(depth_map, image_path):
     print("Point cloud created.")
     return pcd
 
+
 def pointcloud_to_mesh(pcd):
     print("Converting point cloud to mesh...")
     pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
     mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd, depth=9)
     vertices_to_remove = densities < np.quantile(densities, 0.01)
     mesh.remove_vertices_by_mask(vertices_to_remove)
+    mesh.compute_vertex_normals()  # Calculer les normales pour une meilleure qualité de maillage
     print("Mesh created.")
     return mesh
+
 
 def generate_hidden_parts(image_path):
     print("Generating hidden parts...")
@@ -232,6 +237,23 @@ def upload_to_sketchfab(file_path, title, description):
             print(response.json())
             return None
 
+def preprocess_image(image_path):
+    image = cv2.imread(image_path)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(image)
+    l = cv2.equalizeHist(l)
+    image = cv2.merge((l, a, b))
+    image = cv2.cvtColor(image, cv2.COLOR_LAB2BGR)
+    # Utiliser une meilleure méthode de débruitage
+    image = cv2.fastNlMeansDenoisingColored(image, None, 10, 10, 7, 21)
+    return image
+
+def save_preprocessed_images(image_path, output_path):
+    image = preprocess_image(image_path)
+    # Sauvegarder l'image en qualité maximale
+    cv2.imwrite(output_path, image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -243,10 +265,14 @@ def process_image():
     file_path = f'uploads/{file.filename}'
     file.save(file_path)
 
+    # Pré-traitement de l'image
+    preprocessed_path = f'uploads/preprocessed_{file.filename}'
+    save_preprocessed_images(file_path, preprocessed_path)
+
     # Estimer la profondeur avec l'image originale
     print("Estimating depth for original image...")
-    depth_map = estimate_depth(file_path)
-    pcd = depth_to_pointcloud(depth_map, file_path)
+    depth_map = estimate_depth(preprocessed_path)
+    pcd = depth_to_pointcloud(depth_map, preprocessed_path)
     original_ply_path = 'static/scan_base/original.ply'
     o3d.io.write_point_cloud(original_ply_path, pcd)
     print(f"Original point cloud saved to {original_ply_path}")

@@ -7,26 +7,32 @@
     <link rel="stylesheet" href="static/styles.css">
 </head>
 <body>
-    <h1>3D Image Generation</h1>
-    <form id="upload-form" enctype="multipart/form-data">
-        <div class="form-top-row">
-            <input type="file" id="image" name="image" accept="image/*" required>
-            <div id="loader" class="loader" style="display: none;"></div>
-            <button type="submit">Upload and Process</button>
+    <div class="container">
+        <h1>3D Image Generation</h1>
+        <form id="upload-form" enctype="multipart/form-data">
+            <div class="form-top-row">
+                <input type="file" id="image" name="image" accept="image/*" required>
+                <div id="loader" class="loader" style="display: none;"></div>
+                <button type="submit">Upload and Process</button>
+            </div>
+            <br>
+            <img id="preview" src="#" alt="Image Preview" style="display: none;">
+            <p id="image-name"></p>
+        </form>
+        <div class="info-section">
+            <h2>About the Scan</h2>
+            <p>This application generates a 3D model from a 2D image using advanced depth estimation and point cloud processing techniques. Simply upload an image to get started, and the system will handle the rest, including depth estimation, point cloud creation, and 3D model generation.</p>
         </div>
-        <br>
-        <img id="preview" src="#" alt="Image Preview" style="display: none;">
-        <p id="image-name"></p>
-    </form>
-    <div class="container" id="result-container" style="display: none;">
-        <div class="section" id="section1" style="display: none;">
-            <h2>Original 3D Image</h2>
-            <iframe id="original-viewer" title="Original Scan" width="640" height="480" frameborder="0" allow="autoplay; fullscreen" allow="fullscreen"></iframe>
-            <button id="validate1" onclick="showSection2()">Validate and Proceed</button>
-        </div>
-        <div class="section" id="section2" style="display: none;">
-            <h2>Final 3D Image</h2>
-            <iframe id="final-viewer" title="Final Scan" width="640" height="480" frameborder="0" allow="autoplay; fullscreen" allow="fullscreen"></iframe>
+        <div class="container" id="result-container" style="display: none;">
+            <div class="section" id="section1" style="display: none;">
+                <h2>Original 3D Image</h2>
+                <iframe id="original-viewer" title="Original Scan" width="640" height="480" frameborder="0" allow="autoplay; fullscreen" allow="fullscreen"></iframe>
+                <button id="validate1" onclick="showSection2()">Validate and Proceed</button>
+            </div>
+            <div class="section" id="section2" style="display: none;">
+                <h2>Final 3D Image</h2>
+                <iframe id="final-viewer" title="Final Scan" width="640" height="480" frameborder="0" allow="autoplay; fullscreen" allow="fullscreen"></iframe>
+            </div>
         </div>
     </div>
 

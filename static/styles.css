@@ -7,7 +7,7 @@ body {
     min-height: 100vh;
     margin: 0;
     font-family: 'Arial', sans-serif;
-    background-color: #f0f2f5;
+    background-color: #000c18;
     color: #333;
 }
 
@@ -127,6 +127,7 @@ p {
     display: none;
 }
 
+/* Loader */
 .loader {
     width: 60px;
     aspect-ratio: 2;
@@ -143,4 +144,22 @@ p {
     40%{background-position:0% 100%, 50%   0%,100%  50%}
     60%{background-position:0%  50%, 50% 100%,100%   0%}
     80%{background-position:0%  50%, 50%  50%,100% 100%}
+}
+
+/* Info Section */
+.info-section {
+    background-color: #e9ecef;
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 5px;
+}
+
+.info-section h2 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+}
+
+.info-section p {
+    font-size: 1em;
+    margin: 0;
 }

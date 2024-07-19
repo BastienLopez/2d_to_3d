@@ -126,13 +126,7 @@ def estimate_depth(image_path, model_type="DPT_Large"):
     transform = midas_transforms.dpt_transform if model_type == "DPT_Large" else midas_transforms.small_transform
     img = Image.open(image_path)
 
-    # Redimensionner l'image si elle est trop grande
-    max_size = 2048  # Taille maximale pour les images 2K
-    if max(img.size) > max_size:
-        scale = max_size / max(img.size)
-        new_size = (int(img.size[0] * scale), int(img.size[1] * scale))
-        img = img.resize(new_size, Image.LANCZOS)  # Utiliser Image.LANCZOS pour le redimensionnement
-
+    # Ne pas redimensionner l'image pour conserver la qualité maximale
     img = np.array(img) / 255.0  # Convertir l'image en tableau NumPy et normaliser
 
     # Gérer les images en niveaux de gris
@@ -164,8 +158,6 @@ def estimate_depth(image_path, model_type="DPT_Large"):
     print("Depth map created.")
     return depth_map
 
-
-
 def depth_to_pointcloud(depth_map, image_path):
     print("Converting depth map to point cloud...")
     image = cv2.imread(image_path)
@@ -185,7 +177,6 @@ def depth_to_pointcloud(depth_map, image_path):
     print("Point cloud created.")
     return pcd
 
-
 def pointcloud_to_mesh(pcd):
     print("Converting point cloud to mesh...")
     pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
@@ -196,22 +187,21 @@ def pointcloud_to_mesh(pcd):
     print("Mesh created.")
     return mesh
 
+def preprocess_image(image_path):
+    image = cv2.imread(image_path)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(image)
+    l = cv2.equalizeHist(l)
+    image = cv2.merge((l, a, b))
+    image = cv2.cvtColor(image, cv2.COLOR_LAB2BGR)
+    # Utiliser une meilleure méthode de débruitage
+    image = cv2.fastNlMeansDenoisingColored(image, None, 10, 10, 7, 21)
+    return image
 
-def generate_hidden_parts(image_path):
-    print("Generating hidden parts...")
-    img = Image.open(image_path)
-    transform = transforms.Compose([
-        transforms.Resize((28, 28)),  # Redimensionner l'image
-        transforms.ToTensor()
-    ])
-    img_tensor = transform(img).unsqueeze(0)
-    with torch.no_grad():
-        generated_img_tensor, _, _ = model(img_tensor)
-    generated_img = transforms.ToPILImage()(generated_img_tensor.squeeze())
-    generated_img = generated_img.resize(img.size, Image.LANCZOS)  # Redimensionner à la taille originale de l'image
-    print(f"Generated image shape: {generated_img.size}")  # Ajout du journal des dimensions de l'image générée
-    print("Hidden parts generated.")
-    return generated_img
+def save_preprocessed_images(image_path, output_path):
+    image = preprocess_image(image_path)
+    # Sauvegarder l'image en qualité maximale
+    cv2.imwrite(output_path, image, [cv2.IMWRITE_JPEG_QUALITY, 100])
 
 def upload_to_sketchfab(file_path, title, description):
     api_url = "https://api.sketchfab.com/v3/models"
@@ -236,23 +226,6 @@ def upload_to_sketchfab(file_path, title, description):
             print(f"Failed to upload model to Sketchfab: {response.status_code}")
             print(response.json())
             return None
-
-def preprocess_image(image_path):
-    image = cv2.imread(image_path)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-    l, a, b = cv2.split(image)
-    l = cv2.equalizeHist(l)
-    image = cv2.merge((l, a, b))
-    image = cv2.cvtColor(image, cv2.COLOR_LAB2BGR)
-    # Utiliser une meilleure méthode de débruitage
-    image = cv2.fastNlMeansDenoisingColored(image, None, 10, 10, 7, 21)
-    return image
-
-def save_preprocessed_images(image_path, output_path):
-    image = preprocess_image(image_path)
-    # Sauvegarder l'image en qualité maximale
-    cv2.imwrite(output_path, image, [cv2.IMWRITE_JPEG_QUALITY, 100])
-
 
 @app.route('/')
 def index():

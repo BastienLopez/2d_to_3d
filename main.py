@@ -20,6 +20,7 @@ deepai_api_key = config['deepai_api_key']
 roboflow_api_key = config['roboflow_api_key']
 sketchfab_api_key = config['sketchfab_api_key']
 removebg_api_key = config['removebg_api_key']
+openai_api_key = config['openai_api_key']
 
 # Récupérer les chemins du projet
 root_dir = project_structure['root']
@@ -203,6 +204,28 @@ def upload_to_sketchfab(file_path, title, description):
             print(response.json())
             return None
 
+def inpaint_image(image_path):
+    print("Inpainting image to fill missing parts...")
+    api_url = "https://api.deepai.org/api/deep-image-prior"
+    with open(image_path, 'rb') as image_file:
+        response = requests.post(
+            api_url,
+            files={'image': image_file},
+            headers={'api-key': deepai_api_key}
+        )
+    if response.status_code == 200:
+        result = response.json()
+        inpainted_image_url = result['output_url']
+        inpainted_image_response = requests.get(inpainted_image_url)
+        inpainted_image_path = image_path.replace('.jpg', '_inpainted.jpg')
+        with open(inpainted_image_path, 'wb') as inpainted_image_file:
+            inpainted_image_file.write(inpainted_image_response.content)
+        print("Inpainting completed.")
+        return inpainted_image_path
+    else:
+        print("Failed to inpaint image:", response.status_code, response.text)
+        return image_path
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -227,10 +250,13 @@ def process_image():
     # Suppression de l'arrière-plan
     remove_background(enhanced_image_path)
 
+    # Inpainting de l'image
+    inpainted_image_path = inpaint_image(enhanced_image_path)
+
     # Estimer la profondeur avec l'image originale
     print("Estimating depth for original image...")
-    depth_map = estimate_depth(enhanced_image_path)
-    pcd = depth_to_pointcloud(depth_map, enhanced_image_path)
+    depth_map = estimate_depth(inpainted_image_path)
+    pcd = depth_to_pointcloud(depth_map, inpainted_image_path)
     original_ply_path = 'static/scan_base/original.ply'
     o3d.io.write_point_cloud(original_ply_path, pcd)
     print(f"Original point cloud saved to {original_ply_path}")

@@ -1,86 +1,87 @@
-### README.md
-
-```markdown
 # 2D to 3D Image Generation Project
 
-Ce projet permet de convertir une image 2D en une représentation 3D en utilisant des techniques de génération de profondeur et d'amélioration IA pour générer des parties cachées de l'image.
+This project converts a 2D image into a 3D representation using depth generation techniques, 3D mesh reconstruction, and AI-based enhancements for missing parts of the image.
 
-## Dépendances
+## Dependencies
 
-Assurez-vous d'avoir Python 3.6 ou une version ultérieure installée. Vous pouvez installer les dépendances nécessaires avec le fichier `requirements.txt`.
+Ensure you have Python 3.6 or later installed. You can install the necessary dependencies using the `requirements.txt` file.
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Lancement du Projet
+## Project Setup and Execution
 
-1. **Clonez le dépôt et naviguez dans le répertoire du projet :**
+1. **Clone the repository and navigate to the project directory:**
 
 ```bash
-git clone <URL_DU_DEPOT>
+git clone <REPOSITORY_URL>
 cd 2d_to_3d
 ```
 
-2. **Installez les dépendances :**
+2. **Install the dependencies:**
 
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **Exécutez le fichier `main.py` pour lancer l'application :**
+3. **Run the `main.py` file to start the application:**
 
 ```bash
 python main.py
 ```
 
-4. **Accédez à l'interface web via votre navigateur :**
+4. **Access the web interface in your browser:**
 
 ```
 http://127.0.0.1:5000
 ```
 
-## Utilisation de l'Interface Web
+## Web Interface Usage
 
-### Étape 1 : Téléchargez une Image
+### Step 1: Upload an Image
 
-1. Choisissez une image depuis votre ordinateur en utilisant le bouton "Choisir un fichier".
-2. Cliquez sur "Upload and Process".
+1. Select an image from your computer using the "Choose File" button.
+2. Click "Upload and Process" to start the transformation.
 
-### Étape 2 : Visualisation de l'Image 3D Originale
+### Step 2: View the Original 3D Image
 
-Après le téléchargement et le traitement, l'interface affichera l'image 3D originale générée. Vous pouvez valider et passer à l'étape suivante en cliquant sur "Validate and Proceed".
+After the upload and processing, the interface will display the generated 3D image. You can validate this step and move on by clicking "Validate and Proceed."
 
-### Étape 3 : Visualisation de l'Image 3D avec Modifications IA
+### Step 3: View the AI-enhanced 3D Image
 
-L'interface affichera ensuite l'image 3D avec les parties cachées générées par l'IA. Vous pouvez valider et passer à l'étape suivante en cliquant sur "Validate and Proceed".
+The AI will generate missing parts of the image, improving the 3D model. This updated image will be shown. You can validate and proceed as before.
 
-### Étape 4 : Visualisation de l'Image 3D Finale
+### Step 4: View the Final 3D Image
 
-Enfin, l'interface affichera l'image 3D finale avec toutes les modifications.
+The final 3D model will be displayed with all enhancements applied.
 
-## Exemple de Résultats
+## Example Results
 
-### Étape 1 : Image Originale
+### Step 1: Original Image
 
 ![Original Image](static/img/etape_1.png)
 
-### Étape 2 : Image 3D Originale
+### Step 2: 3D Image Generated
 
-![Original 3D Image](static/img/etape_2.png)
+![3D Image](static/img/etape_2.png)
 
-### Étape 3 : Image 3D avec Modifications IA
+### Step 3: AI-enhanced 3D Image
 
-![Modified 3D Image](static/img/etape_3.png)
+![AI-enhanced 3D Image](static/img/etape_3.png)
 
-### Étape 4 : Image 3D Finale
+### Step 4: Final 3D Image
 
 ![Final 3D Image](static/img/etape_4.png)
 
-## Détails Techniques
+## Technical Details
 
-- **Estimate Depth** : Utilise le modèle MiDaS pour estimer la profondeur à partir d'une image 2D.
-- **Depth to Point Cloud** : Convertit la carte de profondeur en un nuage de points.
-- **Point Cloud to Mesh** : Convertit le nuage de points en un maillage 3D.
-- **Generate Hidden Parts** : Utilise un VAE (Variational Autoencoder) pour générer les parties cachées de l'image.
-
+- **Depth Estimation**: The project uses the MiDaS model to estimate depth from a 2D image.
+- **Depth to Point Cloud**: Converts the depth map into a 3D point cloud.
+- **Point Cloud to Mesh**: Converts the point cloud into a 3D mesh model.
+- **AI-based Enhancements**:
+  - **Inpainting for Missing Parts**: Completes missing sections using AI-based inpainting.
+  - **Texture Generation**: GPT-4 analyzes the image and improves textures based on AI suggestions.
+  - **Annotation & Segmentation**: Assists in segmenting objects within the image for better 3D reconstruction.
+  - **Parameter Optimization**: GPT-4 optimizes reconstruction parameters based on analysis.
+  - **3D Model Synthesis**: GPT-4 helps fuse data to create more precise 3D models.
